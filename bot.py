@@ -68,7 +68,7 @@ def evening_job():
     build_and_send("evening")
 
 
-def main():
+def _check_env():
     missing = [k for k, v in {
         "GROQ_API_KEY": GROQ_API_KEY,
         "TELEGRAM_BOT_TOKEN": TELEGRAM_BOT_TOKEN,
@@ -77,6 +77,9 @@ def main():
     if missing:
         raise SystemExit(f"Missing env vars: {', '.join(missing)}")
 
+
+def main():
+    _check_env()
     scheduler = BlockingScheduler(timezone=IST)
     scheduler.add_job(morning_job, "cron", hour=6, minute=0, id="morning_brief")
     scheduler.add_job(evening_job, "cron", hour=18, minute=0, id="evening_brief")
@@ -91,6 +94,7 @@ def main():
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--run-now":
+        _check_env()
         slot = sys.argv[2] if len(sys.argv) > 2 else "morning"
         build_and_send(slot)
     else:
