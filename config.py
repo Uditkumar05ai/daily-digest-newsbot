@@ -23,6 +23,14 @@ RSS_FEEDS = [
     {"name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/", "category": "ai"},
     {"name": "The Verge AI", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "category": "ai"},
     {"name": "Google News AI", "url": "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai"},
+    # AI Releases (model launches, product drops, big announcements)
+    {"name": "OpenAI Blog", "url": "https://openai.com/blog/rss.xml", "category": "ai_releases"},
+    {"name": "Anthropic News", "url": "https://www.anthropic.com/news/rss", "category": "ai_releases"},
+    {"name": "Google DeepMind", "url": "https://deepmind.google/blog/rss", "category": "ai_releases"},
+    {"name": "Meta AI", "url": "https://ai.meta.com/blog/rss/", "category": "ai_releases"},
+    {"name": "Mistral AI", "url": "https://mistral.ai/news/rss", "category": "ai_releases"},
+    {"name": "Google AI Blog", "url": "https://blog.google/technology/ai/rss", "category": "ai_releases"},
+    {"name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/", "category": "ai_releases"},
     # India Business / D2C / Startups
     {"name": "Inc42", "url": "https://inc42.com/feed/", "category": "india_business"},
     {"name": "Entrackr", "url": "https://entrackr.com/feed/", "category": "india_business"},
@@ -56,6 +64,12 @@ SYSTEM_PROMPT = (
     "AI & TECH — strict filter:\n"
     "NEVER include: minor AI embarrassment stories, small model updates, incremental feature releases from big companies unless the feature affects more than 100 million users.\n"
     "Only include: new model releases that beat benchmarks, funding rounds above $100M, AI policy decisions by governments, major product launches that change user behavior at scale.\n\n"
+    "🚀 AI RELEASES category — tracks new model launches, product releases, and major announcements from leading AI companies only.\n"
+    "ONLY include: new model releases with benchmark results or capability claims, new product launches from OpenAI/Anthropic/Google/Meta/Mistral/xAI/Nvidia, major AI policy decisions by governments affecting the AI industry, funding rounds above $500M in AI, AI research breakthroughs published in major journals.\n"
+    "NEVER include: general AI opinion pieces, AI ethics debates without a specific product, incremental feature updates, AI in non-tech industries unless the scale is massive.\n"
+    "This category should feel like a changelog for the AI industry. If OpenAI dropped a new model today, it appears here immediately. Format: name the model or product specifically, state what it can do that previous versions couldn't, state which company or user segment it affects.\n"
+    "Example of a story that belongs: 'OpenAI releases GPT-5 with 2x benchmark improvement over GPT-4o'.\n"
+    "Example of a story that does NOT belong: 'AI is changing how we work' — opinion piece, no specific release.\n\n"
     "INDIA BUSINESS — strict filter:\n"
     "ONLY include: Indian startup funding rounds, D2C brand news, Flipkart/Meesho/Zepto/Blinkit/Zomato/Swiggy/ONDC updates, Indian founder stories, ecommerce trends, quick commerce, consumer tech, Series A/B/C rounds.\n"
     "NEVER include: gold company earnings, jewellery brand results, microfinance, LIC, insurance, banking sector, stock market movements, government divestment, quarterly results of traditional companies.\n"
@@ -71,7 +85,7 @@ SYSTEM_PROMPT = (
     "FORMATTING & EXTRAS:\n"
     "- Rate each story 🔴 Big Deal / 🟡 Worth Knowing / 🔵 FYI — place the emoji at the start of the headline.\n"
     "- Wrap each headline in ** for bold; the WHAT / SO WHAT / NEXT lines stay plain text.\n"
-    "- Categories must appear in this order: 🌍 GEOPOLITICS, 🤖 AI & TECH, 📦 INDIA BUSINESS, 🇮🇳 INDIA NEWS, 🔬 SCIENCE & SPACE.\n"
+    "- Categories must appear in this order: 🌍 GEOPOLITICS, 🤖 AI & TECH, 🚀 AI RELEASES, 📦 INDIA BUSINESS, 🇮🇳 INDIA NEWS, 🔬 SCIENCE & SPACE.\n"
     "- Begin the brief with a line: \"📌 Today's Theme: <one sentence>\".\n"
     "- End the brief with a line: \"🔍 Trending Topics: keyword1 · keyword2 · keyword3\" (3-5 keywords).\n"
     "- For the single most important story in each category (the one tagged 🔴, or the top one if none is 🔴), append a line 'Read more → <url>' using the URL provided for that story. Do NOT add Read more links for any other stories. Do not invent URLs — use only what is supplied.\n\n"
@@ -84,6 +98,11 @@ SYSTEM_PROMPT = (
     "Line 3.\n"
     "Read more → <url>\n\n"
     "🤖 AI & TECH\n"
+    "🟡 **Headline**\n"
+    "Line 1.\n"
+    "Line 2.\n"
+    "Line 3.\n\n"
+    "🚀 AI RELEASES\n"
     "🟡 **Headline**\n"
     "Line 1.\n"
     "Line 2.\n"

@@ -1,0 +1,44 @@
+name: Breaking News Check
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+# Needed for the persistence step that commits sent_alerts.json back.
+permissions:
+  contents: write
+
+jobs:
+  check-breaking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for breaking news
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python breaking.py
+
+      - name: Persist sent_alerts.json
+        if: always()
+        run: |
+          if [ -f sent_alerts.json ] && ! git diff --quiet -- sent_alerts.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add sent_alerts.json
+            git commit -m "chore: update breaking alerts log [skip ci]"
+            git push
+          else
+            echo "sent_alerts.json unchanged; nothing to persist."
+          fi

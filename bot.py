@@ -6,8 +6,10 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from config import IST_TIMEZONE, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GROQ_API_KEY
 from fetcher import fetch_all_articles
+from markets import get_market_snapshot
 from summarizer import summarize
 from telegram_sender import send_message
+from weather import get_delhi_weather
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,9 +53,19 @@ def build_and_send(slot: str):
 
     divider = "━" * 20
 
+    weather_line = get_delhi_weather()
+    market_line = get_market_snapshot()
+    info_lines = []
+    if weather_line:
+        info_lines.append(weather_line)
+    if market_line:
+        info_lines.append(market_line)
+    info_block = ("\n".join(info_lines) + "\n") if info_lines else ""
+
     message = (
         f"{header_emoji} **{title}** — {date_str}\n"
         f"{divider}\n"
+        f"{info_block}"
         f"{body}\n"
         f"{divider}\n"
         f"Sources: {sources_line}"

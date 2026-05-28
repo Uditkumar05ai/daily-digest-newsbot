@@ -9,8 +9,10 @@ logger = logging.getLogger(__name__)
 CATEGORY_LABELS = {
     "geopolitics": "GEOPOLITICS",
     "ai": "AI & TECH",
+    "ai_releases": "AI RELEASES",
     "india_business": "INDIA BUSINESS",
     "business": "INDIA BUSINESS",
+    "india_news": "INDIA NEWS",
     "science": "SCIENCE & SPACE",
 }
 
