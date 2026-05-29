@@ -1,111 +1,138 @@
-# Daily Digest NewsBot
+# 🗞 Daily Digest NewsBot
 
-A personal news digest bot that posts a tightly-edited Telegram briefing twice a day, plus a separate breaking-news alerter that wakes you up only when something genuinely big happens.
+> Twice-daily AI-summarized news briefing delivered to Telegram. Free forever.
+
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Groq](https://img.shields.io/badge/LLM-Groq%20LLaMA%203.3--70B-orange)
+![GitHub Actions](https://img.shields.io/badge/Automation-GitHub%20Actions-black)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ## What it does
+A fully automated personal news agent that fetches from 15+ RSS sources, filters and summarizes using LLaMA 3.3-70B via Groq, and delivers a clean brief to Telegram at 6:00 AM and 6:00 PM IST daily.
 
-- **Morning brief** at ~06:00 IST and **evening brief** at ~18:00 IST, delivered to a Telegram chat of your choice.
-- Each brief opens with a Delhi weather line and a market snapshot (Nifty, Sensex, USD/INR, BTC), then categorised stories: Geopolitics · AI & Tech · AI Releases · India Business · India News · Science & Space.
-- A **Breaking News** workflow runs every 2 hours and pushes a one-off Telegram alert only when something matches a strict criteria list (war escalation, head-of-state event, 3%+ market crash, major AI model release, large-scale disaster, etc.). Deduplicated so the same alert never fires twice within 24 hours.
-- Every story is filtered through a Groq-hosted LLaMA 3.3-70B with a strict system prompt that bans filler language and demands a WHAT / SO WHAT / NEXT structure.
+## Features
+- 🌍 6 news categories: Geopolitics, AI & Tech, AI Releases, India Business, India News, Science & Space
+- 🌤 Live Delhi weather via Open-Meteo
+- 📊 Live market snapshot: Nifty, Sensex, USD/INR, Bitcoin
+- 🚨 Breaking news alerts every 2 hours
+- 📅 Weekly Sunday roundup
+- 🔍 Feed health monitor every Monday
+- ✅ Story deduplication across briefs
+- 🔗 Source clustering — same story from multiple sources merged
+- ⚡ Exact timing via cron-job.org (no GitHub Actions drift)
+- 💰 Completely free forever
 
-## Tech stack
-
-- Python 3.11
-- `feedparser` for RSS
-- **Groq + LLaMA 3.3-70B** for summarisation (free tier)
-- `python-telegram-bot` for delivery
-- `requests` for the weather/markets sidebars
-- **GitHub Actions** runs the workflows
-- **cron-job.org** triggers the daily briefs via GitHub's `repository_dispatch` API for sub-minute punctuality (the breaking-news workflow uses GitHub's native cron, where ~15 min drift is fine)
-
-## RSS sources
-
-| Category | Feeds |
+## Tech Stack
+| Component | Technology |
 |---|---|
-| Geopolitics | SCMP, Reuters World (Google News mirror), BBC, Al Jazeera, Google News Geopolitics |
-| AI & Tech | TechCrunch AI, The Verge AI, Google News AI |
-| AI Releases | OpenAI Blog, Anthropic News, Google DeepMind, Meta AI, Mistral AI, Google AI Blog, VentureBeat AI |
-| India Business | Inc42, Entrackr, YourStory, VCCircle, The Ken, two Google News startup queries |
-| India News | Times of India Top Stories, The Hindu National, Indian Express India, Google News India National |
-| Science & Space | Google News Science |
-| Breaking (separate workflow) | BBC, Reuters via Google News, Al Jazeera, Google News Breaking |
+| Language | Python 3.11 |
+| LLM | Groq LLaMA 3.3-70B (free tier) |
+| News Sources | RSS feeds via feedparser |
+| Delivery | Telegram Bot API |
+| Scheduling | cron-job.org → GitHub Actions repository_dispatch |
+| Hosting | GitHub Actions (serverless) |
+| Weather | Open-Meteo API (free, no key) |
+| Markets | Yahoo Finance + ExchangeRate API + CoinGecko |
+
+## News Sources (15+ feeds)
+**Geopolitics:** SCMP, Al Jazeera, BBC News, Reuters via Google News
+**AI & Tech:** TechCrunch AI, The Verge AI, Google News AI
+**AI Releases:** OpenAI Blog, Google AI Blog, VentureBeat AI + Anthropic, DeepMind, Meta AI, Mistral, OpenAI, xAI via Google News
+**India Business:** Inc42, YourStory, The Ken, Google News Startups
+**India News:** Indian Express, The Hindu, Times of India, Google News India
+**Science:** Google News Science
+
+## Sample Output
+```
+🌅 MORNING BRIEF — Fri, 29 May 2026
+━━━━━━━━━━━━━━━━━━━━
+🌤 Delhi: 32°C · Clear Sky · Wind 12 km/h
+📊 Nifty: 23,907 (closed) · Sensex: 75,868 (closed) · ₹/$ 84.1 · BTC $73,514
+📌 Today's Theme: Anthropic hits $965B valuation while Israel escalates in Lebanon
+
+🌍 GEOPOLITICS
+🔴 Israel Declares New Combat Zone in Lebanon
+...
+```
 
 ## Setup
 
-### 1. Fork
-
-Fork this repo to your own GitHub account.
-
-### 2. Create accounts and tokens
-
-- **Groq** — sign up at https://console.groq.com → Create API key (`gsk_...`).
-- **Telegram bot** — chat with `@BotFather` → `/newbot` → copy the bot token. Then send any message to the bot from your account and fetch your chat ID from `https://api.telegram.org/bot<TOKEN>/getUpdates`.
-- **GitHub PAT** for cron-job.org — https://github.com/settings/tokens?type=beta → fine-grained PAT scoped to the forked repo, with **Contents: Read and write**.
-
-### 3. GitHub Actions secrets
-
-In the forked repo: **Settings → Secrets and variables → Actions → New repository secret**. Add:
-
-| Name | Value |
-|---|---|
-| `GROQ_API_KEY` | your Groq key |
-| `TELEGRAM_BOT_TOKEN` | your bot token |
-| `TELEGRAM_CHAT_ID` | your numeric chat ID |
-
-### 4. cron-job.org
-
-Sign up at https://cron-job.org (free, no card). Create two cron jobs:
-
-| Job | UTC schedule | IST equivalent | JSON body |
-|---|---|---|---|
-| Morning | `00:30` daily | 06:00 IST | `{"event_type": "morning_digest"}` |
-| Evening | `12:30` daily | 18:00 IST | `{"event_type": "evening_digest"}` |
-
-Both jobs use the same setup:
-
-- **URL**: `https://api.github.com/repos/<YOUR_USER>/daily-digest-newsbot/dispatches`
-- **Method**: `POST`
-- **Headers**:
-  - `Authorization: Bearer <YOUR_GITHUB_PAT>`
-  - `Accept: application/vnd.github+json`
-- **Body**: JSON, as above.
-
-cron-job.org → "Run now" on each to test. Within ~10 seconds an Actions run appears in your repo and a brief lands on Telegram.
-
-### 5. Breaking news workflow
-
-`.github/workflows/breaking.yml` is already configured to run every 2 hours on GitHub's native cron — no extra setup once the secrets above are in place.
-
-### 6. Local development
-
+### 1. Clone the repo
 ```bash
-cp .env.example .env  # then fill in your keys
+git clone https://github.com/Uditkumar05ai/daily-digest-newsbot
+cd daily-digest-newsbot
 pip install -r requirements.txt
-python bot.py --run-now morning   # one-shot test
-python breaking.py                 # test the alerter
 ```
 
-## Screenshots
-
-> _Telegram screenshots: morning brief, breaking alert. Add `.png`s to `/docs/` and reference them here._
-
-## Project layout
-
+### 2. Create a Telegram bot
+- Message @BotFather → /newbot → copy the token
+- Send any message to your new bot, then get your chat ID:
 ```
-bot.py              # daily digest entrypoint
-breaking.py         # breaking-news alerter
-fetcher.py          # RSS fetch + 12h filter
-summarizer.py       # Groq call for the daily brief
-weather.py          # Open-Meteo Delhi weather
-markets.py          # Yahoo Finance + ExchangeRate + CoinGecko snapshot
-telegram_sender.py  # Telegram delivery + HTML formatting
-config.py           # env vars, RSS feed list, system prompt
-.github/workflows/
-  digest.yml        # repository_dispatch (cron-job.org) + workflow_dispatch
-  breaking.yml      # every-2-hours GitHub cron
+https://api.telegram.org/bot<TOKEN>/getUpdates
 ```
+
+### 3. Get a free Groq API key
+- Sign up at https://console.groq.com
+- Create an API key (free tier: 100k tokens/day)
+
+### 4. Set up environment variables
+```bash
+cp .env.example .env
+# Fill in GROQ_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+```
+
+### 5. Test locally
+```bash
+python bot.py --run-now morning
+```
+
+### 6. Deploy (free)
+- Push to GitHub
+- Add 3 secrets in repo Settings → Secrets → Actions
+- Create two cron-job.org jobs (see below)
+
+### 7. cron-job.org setup
+Create two jobs at https://cron-job.org:
+
+| Job | Schedule (UTC) | Body |
+|---|---|---|
+| Morning | 0:30 (= 6:00 IST) | `{"event_type": "morning_digest"}` |
+| Evening | 12:30 (= 18:00 IST) | `{"event_type": "evening_digest"}` |
+
+For both jobs:
+- URL: `https://api.github.com/repos/YOUR_USERNAME/daily-digest-newsbot/dispatches`
+- Method: POST
+- Headers: `Authorization: Bearer YOUR_GITHUB_PAT` and `Accept: application/vnd.github+json` and `Content-Type: application/json`
+
+## Project Structure
+```
+daily-digest-newsbot/
+├── bot.py              # Entrypoint, scheduler, --run-now flag
+├── fetcher.py          # RSS fetching with SSL-proof requests + feedparser
+├── summarizer.py       # Groq API call + headline extraction + archiving
+├── telegram_sender.py  # Async Telegram send with chunking
+├── config.py           # RSS feeds, system prompt, env vars
+├── dedup.py            # 24h story deduplication
+├── clusterer.py        # Source clustering + importance scoring
+├── archiver.py         # 90-day brief archive
+├── weather.py          # Delhi weather via Open-Meteo
+├── markets.py          # Nifty/Sensex/USD-INR/BTC data
+├── breaking.py         # Breaking news detector
+├── feed_monitor.py     # Weekly feed health checker
+├── weekly.py           # Sunday week-in-review generator
+└── .github/workflows/  # 4 GitHub Actions workflows
+```
+
+## Workflows
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `digest.yml` | cron-job.org 2x daily | Morning + evening brief |
+| `breaking.yml` | Every 2 hours | Breaking news check |
+| `feed_monitor.yml` | Every Monday | Feed health report |
+| `weekly.yml` | Every Sunday | Week in review |
+
+## Sister Project
+🤖 [AI Intelligence Daily](https://github.com/Uditkumar05ai/AI-Intelligence-Daily) — founder-focused daily AI brief
 
 ## License
-
-MIT. See [LICENSE](LICENSE).
+MIT
