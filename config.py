@@ -35,10 +35,10 @@ RSS_FEEDS = [
     {"name": "Google News xAI Grok", "url": "https://news.google.com/rss/search?q=xai+grok+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
     # India Business / D2C / Startups
     {"name": "Inc42", "url": "https://inc42.com/feed/", "category": "india_business"},
-    {"name": "Entrackr", "url": "https://entrackr.com/feed/", "category": "india_business"},
     {"name": "YourStory", "url": "https://yourstory.com/feed", "category": "india_business"},
-    {"name": "VCCircle", "url": "https://www.vccircle.com/feed", "category": "india_business"},
     {"name": "The Ken", "url": "https://the-ken.com/feed/", "category": "india_business"},
+    {"name": "Google News D2C Funding", "url": "https://news.google.com/rss/search?q=india+D2C+startup+funding&hl=en-IN&gl=IN&ceid=IN:en", "category": "india_business"},
+    {"name": "Google News Ecommerce Series", "url": "https://news.google.com/rss/search?q=india+ecommerce+startup+series&hl=en-IN&gl=IN&ceid=IN:en", "category": "india_business"},
     {"name": "Google News Indian Startups", "url": "https://news.google.com/rss/search?q=indian+startup+funding+D2C+ecommerce&hl=en-IN&gl=IN&ceid=IN:en", "category": "india_business"},
     {"name": "Google News India Startups", "url": "https://news.google.com/rss/search?q=india+startup+D2C&hl=en-IN&gl=IN&ceid=IN:en", "category": "india_business"},
     # India News (national-level events)

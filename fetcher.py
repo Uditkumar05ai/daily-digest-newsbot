@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from time import mktime
 
 import feedparser
+import requests
 
 from clusterer import cluster_articles
 from config import RSS_FEEDS, LOOKBACK_HOURS
@@ -12,6 +13,26 @@ from dedup import recent_headlines, is_duplicate
 logger = logging.getLogger(__name__)
 
 TAG_RE = re.compile(r"<[^>]+>")
+
+# A browser User-Agent + explicit fetch avoids SSL/handshake issues that
+# feedparser's raw urllib fetch trips on (e.g. OpenAI's blog feed).
+FETCH_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; DailyDigestBot/1.0)"}
+FETCH_TIMEOUT = 15
+
+
+def _parse_feed(feed):
+    """Fetch a feed with requests + browser UA, then hand bytes to feedparser.
+
+    Falls back to feedparser's own fetch if the HTTP request fails outright,
+    so a transient requests error never silently drops an otherwise-good feed.
+    """
+    try:
+        r = requests.get(feed["url"], headers=FETCH_HEADERS, timeout=FETCH_TIMEOUT)
+        r.raise_for_status()
+        return feedparser.parse(r.content)
+    except Exception as e:
+        logger.warning("HTTP fetch failed for %s (%s); trying feedparser direct.", feed["name"], e)
+        return feedparser.parse(feed["url"])
 
 
 def _clean(text: str) -> str:
@@ -39,7 +60,7 @@ def fetch_all_articles():
 
     for feed in RSS_FEEDS:
         try:
-            parsed = feedparser.parse(feed["url"])
+            parsed = _parse_feed(feed)
             if parsed.bozo and not parsed.entries:
                 logger.warning("Feed failed: %s (%s)", feed["name"], parsed.bozo_exception)
                 continue
