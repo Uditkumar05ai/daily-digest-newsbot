@@ -6,6 +6,7 @@ from time import mktime
 import feedparser
 
 from config import RSS_FEEDS, LOOKBACK_HOURS
+from dedup import recent_headlines, is_duplicate
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ def _entry_time(entry):
 
 def fetch_all_articles():
     cutoff = datetime.now(timezone.utc) - timedelta(hours=LOOKBACK_HOURS)
+    already_sent = recent_headlines()
+    skipped_dupes = 0
     articles = []
 
     for feed in RSS_FEEDS:
@@ -50,6 +53,10 @@ def fetch_all_articles():
                 if not title:
                     continue
 
+                if is_duplicate(title, already_sent):
+                    skipped_dupes += 1
+                    continue
+
                 url = entry.get("link", "") or entry.get("id", "")
                 articles.append({
                     "source": feed["name"],
@@ -64,5 +71,8 @@ def fetch_all_articles():
             logger.warning("Error fetching %s: %s", feed["name"], e)
             continue
 
-    logger.info("Fetched %d articles in last %dh", len(articles), LOOKBACK_HOURS)
+    logger.info(
+        "Fetched %d articles in last %dh (%d dropped as already-sent duplicates)",
+        len(articles), LOOKBACK_HOURS, skipped_dupes,
+    )
     return articles

@@ -1,10 +1,27 @@
 import logging
+import re
 
 from groq import Groq
 
 from config import GROQ_API_KEY, GROQ_MODEL, SYSTEM_PROMPT
+from dedup import add_headlines
 
 logger = logging.getLogger(__name__)
+
+# Story headlines in the digest are wrapped in **bold**.
+_HEADLINE_RE = re.compile(r"\*\*(.+?)\*\*", re.DOTALL)
+
+
+def _extract_headlines(digest: str):
+    """Pull every **bolded** story headline out of the digest body."""
+    headlines = []
+    for match in _HEADLINE_RE.findall(digest):
+        text = match.strip()
+        # Drop any leading rating emoji (🔴/🟡/🔵) if it slipped inside the bold.
+        text = text.lstrip("🔴🟡🔵 ").strip()
+        if text:
+            headlines.append(text)
+    return headlines
 
 CATEGORY_LABELS = {
     "geopolitics": "GEOPOLITICS",
@@ -53,4 +70,9 @@ def summarize(articles):
         temperature=0.4,
         max_tokens=2000,
     )
-    return resp.choices[0].message.content.strip()
+    digest = resp.choices[0].message.content.strip()
+
+    # Record headlines so the next brief can skip these stories.
+    add_headlines(_extract_headlines(digest))
+
+    return digest

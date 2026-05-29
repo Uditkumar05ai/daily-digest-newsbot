@@ -1,30 +1,43 @@
 import logging
+import time
 
 import requests
 
 logger = logging.getLogger(__name__)
 
-YAHOO_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; DailyDigestBot/1.0)"}
+YAHOO_HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def _yahoo_index(symbol_encoded: str):
-    """Return (last_close, percent_change) for a Yahoo Finance index, or None."""
+    """Return (last_value, percent_change, is_closed) for a Yahoo index, or None.
+
+    Uses a 5-day range and a cache-busting timestamp so morning and evening
+    briefs get fresh data. ``is_closed`` is True on weekends/holidays when the
+    market is not in its regular session.
+    """
     try:
-        r = requests.get(
-            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol_encoded}",
-            params={"interval": "1d", "range": "5d"},
-            headers=YAHOO_HEADERS,
-            timeout=10,
+        url = (
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol_encoded}"
+            f"?interval=1d&range=5d&t={int(time.time())}"
         )
+        r = requests.get(url, headers=YAHOO_HEADERS, timeout=10)
         r.raise_for_status()
         result = r.json()["chart"]["result"][0]
-        closes = result["indicators"]["quote"][0]["close"]
-        closes = [c for c in closes if c is not None]
-        if len(closes) < 2:
+        meta = result.get("meta", {})
+        closes = [c for c in result["indicators"]["quote"][0]["close"] if c is not None]
+        if not closes:
             return None
-        prev, last = closes[-2], closes[-1]
-        pct = (last - prev) / prev * 100
-        return last, pct
+
+        # Prefer the live regular-market price from meta when present; fall back
+        # to the most recent close.
+        last = meta.get("regularMarketPrice") or closes[-1]
+        prev = meta.get("chartPreviousClose")
+        if prev is None:
+            prev = closes[-2] if len(closes) >= 2 else last
+
+        is_closed = meta.get("marketState", "").upper() not in ("REGULAR", "PRE", "POST")
+        pct = ((last - prev) / prev * 100) if prev else 0.0
+        return last, pct, is_closed
     except Exception as e:
         logger.warning("Yahoo fetch failed for %s: %s", symbol_encoded, e)
         return None
@@ -33,17 +46,16 @@ def _yahoo_index(symbol_encoded: str):
 def _format_index(name: str, data):
     if not data:
         return f"{name}: N/A"
-    val, pct = data
+    val, pct, is_closed = data
+    if is_closed:
+        return f"{name}: {val:,.0f} (closed)"
     arrow = "▲" if pct >= 0 else "▼"
     return f"{name}: {val:,.0f} {arrow}{abs(pct):.1f}%"
 
 
 def _usd_inr():
     try:
-        r = requests.get(
-            "https://api.exchangerate-api.com/v4/latest/USD",
-            timeout=10,
-        )
+        r = requests.get("https://open.er-api.com/v6/latest/USD", timeout=10)
         r.raise_for_status()
         return float(r.json()["rates"]["INR"])
     except Exception as e:
