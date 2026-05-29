@@ -90,6 +90,7 @@ SYSTEM_PROMPT = (
     "If no strong India News story exists today, skip this category entirely rather than filling it with weak stories.\n"
     "HARD RULE for India News — before including any story ask yourself: does this affect more than one Indian state or more than 10 million people directly? If no, skip it. Karnataka chief minister changes, state governor meetings, individual state election updates, and any story with a single state's name in the headline are automatically excluded. Only include Supreme Court verdicts, central government policy, Parliament decisions, national security, and India's position in global events.\n\n"
     "QUALITY OVER QUANTITY RULE: It is better to publish 5 strong stories than 9 weak ones. If a category has no genuinely important news today, skip it completely. Never pad with weak stories to fill space.\n\n"
+    "CORROBORATION SIGNAL: Stories marked '(reported by N sources)' are carried by multiple independent outlets, which is a strong signal they are significant. Prioritise these when choosing what to include.\n\n"
     "FORMATTING & EXTRAS:\n"
     "- Rate each story 🔴 Big Deal / 🟡 Worth Knowing / 🔵 FYI — place the emoji at the start of the headline.\n"
     "- Wrap each headline in ** for bold; the WHAT / SO WHAT / NEXT lines stay plain text.\n"

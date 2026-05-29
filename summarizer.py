@@ -3,6 +3,7 @@ import re
 
 from groq import Groq
 
+from cluster import cluster_articles
 from config import GROQ_API_KEY, GROQ_MODEL, SYSTEM_PROMPT
 from dedup import add_headlines
 
@@ -35,16 +36,26 @@ CATEGORY_LABELS = {
 
 
 def _format_articles(articles):
+    # Merge same-event stories across sources first; this frees token budget
+    # and orders each category by how many outlets corroborated a story.
+    clustered = cluster_articles(articles)
+
     grouped = {}
-    for a in articles:
+    for a in clustered:
         grouped.setdefault(a["category"], []).append(a)
 
     lines = []
     for cat, items in grouped.items():
         label = CATEGORY_LABELS.get(cat, cat.upper())
         lines.append(f"### Category: {label}")
-        for a in items[:8]:
-            lines.append(f"- Source: {a['source']}")
+        # Clustering removed duplicates, so we can afford a slightly higher cap.
+        for a in items[:10]:
+            count = a.get("source_count", 1)
+            sources = ", ".join(a.get("sources", [a["source"]]))
+            if count > 1:
+                lines.append(f"- Source: {sources} (reported by {count} sources)")
+            else:
+                lines.append(f"- Source: {sources}")
             lines.append(f"  Title: {a['title']}")
             if a.get("summary"):
                 lines.append(f"  Summary: {a['summary'][:220]}")
