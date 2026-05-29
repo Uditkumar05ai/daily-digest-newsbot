@@ -5,6 +5,7 @@ from time import mktime
 
 import feedparser
 
+from clusterer import cluster_articles
 from config import RSS_FEEDS, LOOKBACK_HOURS
 from dedup import recent_headlines, is_duplicate
 
@@ -75,4 +76,6 @@ def fetch_all_articles():
         "Fetched %d articles in last %dh (%d dropped as already-sent duplicates)",
         len(articles), LOOKBACK_HOURS, skipped_dupes,
     )
-    return articles
+
+    # Collapse same-event stories across sources before returning.
+    return cluster_articles(articles)

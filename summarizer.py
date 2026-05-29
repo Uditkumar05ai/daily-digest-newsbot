@@ -1,28 +1,22 @@
 import logging
 import re
 
+from datetime import datetime
+
+import pytz
 from groq import Groq
 
-from cluster import cluster_articles
-from config import GROQ_API_KEY, GROQ_MODEL, SYSTEM_PROMPT
+from archiver import save_brief
+from config import GROQ_API_KEY, GROQ_MODEL, IST_TIMEZONE, SYSTEM_PROMPT
 from dedup import add_headlines
 
 logger = logging.getLogger(__name__)
 
+IST = pytz.timezone(IST_TIMEZONE)
+
 # Story headlines in the digest are wrapped in **bold**.
 _HEADLINE_RE = re.compile(r"\*\*(.+?)\*\*", re.DOTALL)
-
-
-def _extract_headlines(digest: str):
-    """Pull every **bolded** story headline out of the digest body."""
-    headlines = []
-    for match in _HEADLINE_RE.findall(digest):
-        text = match.strip()
-        # Drop any leading rating emoji (🔴/🟡/🔵) if it slipped inside the bold.
-        text = text.lstrip("🔴🟡🔵 ").strip()
-        if text:
-            headlines.append(text)
-    return headlines
+_THEME_RE = re.compile(r"Today'?s Theme:\s*(.+)", re.IGNORECASE)
 
 CATEGORY_LABELS = {
     "geopolitics": "GEOPOLITICS",
@@ -34,38 +28,85 @@ CATEGORY_LABELS = {
     "science": "SCIENCE & SPACE",
 }
 
+# Category display names used as headers inside the digest body.
+_KNOWN_CATEGORIES = [
+    "GEOPOLITICS", "AI & TECH", "AI RELEASES",
+    "INDIA BUSINESS", "INDIA NEWS", "SCIENCE & SPACE",
+]
+
+
+def _clean_headline(text: str) -> str:
+    return text.strip().lstrip("🔴🟡🔵 ").strip()
+
+
+def _extract_headlines(digest: str):
+    """Pull every **bolded** story headline out of the digest body."""
+    headlines = []
+    for match in _HEADLINE_RE.findall(digest):
+        text = _clean_headline(match)
+        if text:
+            headlines.append(text)
+    return headlines
+
+
+def _extract_theme(digest: str) -> str:
+    m = _THEME_RE.search(digest)
+    return m.group(1).strip() if m else ""
+
+
+def _extract_stories(digest: str):
+    """Return [{category, headline}] by tracking category headers in the body."""
+    stories = []
+    current = "GENERAL"
+    for raw in digest.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        # Detect a category header line (emoji + label, no bold story text).
+        upper = line.upper()
+        matched_cat = next(
+            (c for c in _KNOWN_CATEGORIES if c in upper and len(line) <= len(c) + 6),
+            None,
+        )
+        if matched_cat and "**" not in line:
+            current = matched_cat
+            continue
+        for h in _HEADLINE_RE.findall(line):
+            headline = _clean_headline(h)
+            if headline:
+                stories.append({"category": current, "headline": headline})
+    return stories
+
 
 def _format_articles(articles):
-    # Merge same-event stories across sources first; this frees token budget
-    # and orders each category by how many outlets corroborated a story.
-    clustered = cluster_articles(articles)
-
+    # Articles arrive already clustered (see fetcher), so each one carries a
+    # source_count. Order each category by corroboration so the big stories
+    # survive the per-category cap.
     grouped = {}
-    for a in clustered:
+    for a in articles:
         grouped.setdefault(a["category"], []).append(a)
 
     lines = []
     for cat, items in grouped.items():
         label = CATEGORY_LABELS.get(cat, cat.upper())
+        items = sorted(items, key=lambda a: a.get("source_count", 1), reverse=True)
         lines.append(f"### Category: {label}")
-        # Clustering removed duplicates, so we can afford a slightly higher cap.
-        for a in items[:10]:
+        # Cap per category to stay under Groq's 12K tokens/min limit. Items are
+        # sorted by source_count so the most-corroborated stories survive.
+        for a in items[:6]:
             count = a.get("source_count", 1)
-            sources = ", ".join(a.get("sources", [a["source"]]))
-            if count > 1:
-                lines.append(f"- Source: {sources} (reported by {count} sources)")
-            else:
-                lines.append(f"- Source: {sources}")
+            primary = a.get("sources", [a["source"]])[0]
+            lines.append(f"- Source: {primary} (source_count: {count})")
             lines.append(f"  Title: {a['title']}")
             if a.get("summary"):
-                lines.append(f"  Summary: {a['summary'][:220]}")
+                lines.append(f"  Summary: {a['summary'][:160]}")
             if a.get("url"):
                 lines.append(f"  URL: {a['url']}")
         lines.append("")
     return "\n".join(lines)
 
 
-def summarize(articles):
+def summarize(articles, slot: str = "morning"):
     if not articles:
         return None
 
@@ -85,5 +126,19 @@ def summarize(articles):
 
     # Record headlines so the next brief can skip these stories.
     add_headlines(_extract_headlines(digest))
+
+    # Archive the brief for the weekly roundup.
+    try:
+        now = datetime.now(IST)
+        save_brief({
+            "date": now.strftime("%Y-%m-%d"),
+            "slot": slot,
+            "theme": _extract_theme(digest),
+            "stories": _extract_stories(digest),
+            "sources": sorted({s for a in articles for s in a.get("sources", [a.get("source", "")]) if s}),
+            "sent_at": now.replace(microsecond=0).isoformat(),
+        })
+    except Exception as e:
+        logger.warning("Failed to archive brief: %s", e)
 
     return digest

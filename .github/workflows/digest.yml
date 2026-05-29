@@ -54,15 +54,15 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python bot.py --run-now ${{ steps.slot.outputs.slot }}
 
-      - name: Persist sent_stories.json
+      - name: Persist sent_stories.json and archive.json
         if: always()
         run: |
-          if [ -f sent_stories.json ] && ! git diff --quiet -- sent_stories.json; then
+          git add sent_stories.json archive.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No state changes to persist."
+          else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add sent_stories.json
-            git commit -m "chore: update sent stories log [skip ci]"
+            git commit -m "chore: update brief state (sent stories + archive) [skip ci]"
             git push
-          else
-            echo "sent_stories.json unchanged; nothing to persist."
           fi

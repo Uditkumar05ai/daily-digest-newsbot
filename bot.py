@@ -39,7 +39,7 @@ def build_and_send(slot: str):
         return
 
     try:
-        body = summarize(articles)
+        body = summarize(articles, slot=slot)
     except Exception as e:
         logger.exception("Summarization failed: %s", e)
         return
