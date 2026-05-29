@@ -25,12 +25,14 @@ RSS_FEEDS = [
     {"name": "Google News AI", "url": "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai"},
     # AI Releases (model launches, product drops, big announcements)
     {"name": "OpenAI Blog", "url": "https://openai.com/blog/rss.xml", "category": "ai_releases"},
-    {"name": "Anthropic News", "url": "https://www.anthropic.com/news/rss", "category": "ai_releases"},
-    {"name": "Google DeepMind", "url": "https://deepmind.google/blog/rss", "category": "ai_releases"},
-    {"name": "Meta AI", "url": "https://ai.meta.com/blog/rss/", "category": "ai_releases"},
-    {"name": "Mistral AI", "url": "https://mistral.ai/news/rss", "category": "ai_releases"},
     {"name": "Google AI Blog", "url": "https://blog.google/technology/ai/rss", "category": "ai_releases"},
     {"name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/", "category": "ai_releases"},
+    {"name": "Google News Anthropic", "url": "https://news.google.com/rss/search?q=anthropic+claude+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
+    {"name": "Google News DeepMind", "url": "https://news.google.com/rss/search?q=deepmind+google+AI+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
+    {"name": "Google News Meta AI", "url": "https://news.google.com/rss/search?q=meta+AI+llama+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
+    {"name": "Google News Mistral", "url": "https://news.google.com/rss/search?q=mistral+AI+model+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
+    {"name": "Google News OpenAI", "url": "https://news.google.com/rss/search?q=openai+gpt+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
+    {"name": "Google News xAI Grok", "url": "https://news.google.com/rss/search?q=xai+grok+release&hl=en-IN&gl=IN&ceid=IN:en", "category": "ai_releases"},
     # India Business / D2C / Startups
     {"name": "Inc42", "url": "https://inc42.com/feed/", "category": "india_business"},
     {"name": "Entrackr", "url": "https://entrackr.com/feed/", "category": "india_business"},
