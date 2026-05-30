@@ -153,6 +153,54 @@
         "YourStory"
       ],
       "sent_at": "2026-05-30T06:01:04+05:30"
+    },
+    {
+      "date": "2026-05-30",
+      "slot": "evening",
+      "theme": "India and the US are taking steps to counter China's Belt and Road Initiative, while Anthropic and OpenAI are releasing new AI models with improved capabilities.",
+      "stories": [
+        {
+          "category": "GEOPOLITICS",
+          "headline": "US Counters China's Belt and Road Initiative"
+        },
+        {
+          "category": "AI & TECH",
+          "headline": "OpenAI and Anthropic Release New AI Models"
+        },
+        {
+          "category": "AI RELEASES",
+          "headline": "Anthropic Releases Claude Opus 4.8"
+        },
+        {
+          "category": "INDIA BUSINESS",
+          "headline": "Indian Startups Raise $52 Million"
+        },
+        {
+          "category": "INDIA NEWS",
+          "headline": "India Confined Pakistan Navy to Ports"
+        },
+        {
+          "category": "SCIENCE & SPACE",
+          "headline": "China Begins Study of Space Station Samples"
+        }
+      ],
+      "sources": [
+        "Al Jazeera",
+        "BBC News",
+        "Google News AI",
+        "Google News Anthropic",
+        "Google News Geopolitics",
+        "Google News OpenAI",
+        "Google News Science",
+        "Inc42",
+        "Indian Express India",
+        "South China Morning Post",
+        "The Hindu National",
+        "The Verge AI",
+        "Times of India Top Stories",
+        "YourStory"
+      ],
+      "sent_at": "2026-05-30T18:01:08+05:30"
     }
   ]
 }
